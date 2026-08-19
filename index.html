@@ -1,17 +1,337 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- CSS Styles -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family Board Dashboard</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --primary: #2563eb;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Top Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .nav-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #e5e7eb;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .nav-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Sub Tabs & Sidebar Controls */
+    .sub-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .sub-btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .sub-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+
+    .card-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .card-body {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .btn-action {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 6px;
+    }
+
+    .btn-archive { background: #e5e7eb; color: #374151; }
+    .btn-delete { background: #fee2e2; color: #991b1b; }
+    .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
 </head>
 <body>
 
-  <div class="container">
-    <!-- Navigation & Feed -->
+<div class="container">
+  <!-- Main Nav -->
+  <div class="nav-tabs">
+    <button class="nav-btn active" onclick="switchMainTab('calendar', event)">📅 CALENDAR</button>
+    <button class="nav-btn" onclick="switchMainTab('school', event)">🏫 SCHOOL INFO</button>
   </div>
 
-  <script>
-    // Complete JS code with fetchData() at the bottom
-  </script>
+  <!-- Sub Nav (Person Filter) -->
+  <div class="sub-tabs" id="subTabs">
+    <button class="sub-btn active" onclick="filterPerson('All', event)">All</button>
+    <button class="sub-btn" onclick="filterPerson('Lola', event)">Lola</button>
+    <button class="sub-btn" onclick="filterPerson('Simone', event)">Simone</button>
+    <button class="sub-btn" onclick="filterPerson('Honoré', event)">Honoré</button>
+  </div>
+
+  <!-- Feed Container -->
+  <div id="feed">Loading data...</div>
+</div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbyzjr6wOvytUVVc7t40UkoBSvq45TasWRV_UUQ9YWbbka5jjR_Ol4zGQCJDwnDSObQl/exec";
+
+  let rawData = [];
+  let activeMainTab = 'calendar';
+  let activePerson = 'All';
+
+  function normalizeName(str) {
+    if (!str) return '';
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
+
+  function formatEmailUrl(linkStr) {
+    if (!linkStr) return null;
+    const cleanStr = String(linkStr).trim();
+    if (!cleanStr) return null;
+    
+    if (cleanStr.startsWith('http://') || cleanStr.startsWith('https://')) {
+      return cleanStr;
+    }
+    return `https://mail.google.com/mail/u/0/#search/${encodeURIComponent(cleanStr)}`;
+  }
+
+  async function fetchData() {
+    try {
+      const response = await fetch(API_URL);
+      rawData = await response.json();
+      renderFeed();
+    } catch (err) {
+      document.getElementById('feed').innerHTML = '<p>Error loading data. Check API URL or Google Apps Script deployment permissions.</p>';
+    }
+  }
+
+  function switchMainTab(tab, event) {
+    activeMainTab = tab;
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    if (event && event.target) event.target.classList.add('active');
+    renderFeed();
+  }
+
+  function filterPerson(person, event) {
+    activePerson = person;
+    document.querySelectorAll('.sub-btn').forEach(btn => btn.classList.remove('active'));
+    if (event && event.target) event.target.classList.add('active');
+    renderFeed();
+  }
+
+  function createGCalUrl(item) {
+    const validEmail = formatEmailUrl(item.emailLink);
+    const title = encodeURIComponent(`${item.person ? item.person + ' — ' : ''}${item.title || 'Event'}`);
+    const details = encodeURIComponent(`${item.notes || ''}\n\nOriginal Email: ${validEmail || 'N/A'}`);
+    const location = encodeURIComponent(item.location || '');
+    
+    let datesParam = '';
+    if (item.dateTime && !isNaN(new Date(item.dateTime))) {
+      const start = new Date(item.dateTime);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      
+      const formatIso = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+      datesParam = `&dates=${formatIso(start)}/${formatIso(end)}`;
+    }
+
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}${datesParam}`;
+  }
+
+  function renderFeed() {
+    const feed = document.getElementById('feed');
+    feed.innerHTML = '';
+
+    let filtered = rawData.filter(item => {
+      const cat = (item.category || '').toLowerCase().trim();
+      if (activeMainTab === 'calendar') {
+        return cat.includes('cal') || cat.includes('event') || !cat.includes('school');
+      } else {
+        return cat.includes('school') || cat.includes('info');
+      }
+    });
+
+    if (activePerson !== 'All') {
+      const target = normalizeName(activePerson);
+      filtered = filtered.filter(item => normalizeName(item.person) === target);
+    }
+
+    filtered.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+
+    if (filtered.length === 0) {
+      feed.innerHTML = '<p style="color: #6b7280; text-align: center; padding: 20px;">No entries found for this tab.</p>';
+      return;
+    }
+
+    filtered.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.id = `card-row-${item.rowId}`;
+      
+      const dateFormatted = item.dateTime && !isNaN(new Date(item.dateTime))
+        ? new Date(item.dateTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+        : 'Date TBD';
+
+      const gcalUrl = createGCalUrl(item);
+      const validEmailUrl = formatEmailUrl(item.emailLink);
+
+      if (activeMainTab === 'calendar') {
+        const locationLine = item.location ? `📍 ${item.location}` : '';
+        
+        card.innerHTML = `
+          <div class="card-title">${item.person ? `${item.person} — ` : ''}${item.title || 'Untitled Event'}</div>
+          <div class="card-meta">📅 ${dateFormatted} ${locationLine}</div>
+          ${item.notes ? `<div style="font-style: italic; color: #4b5563; font-size: 13px; margin-bottom: 10px;">${item.notes}</div>` : ''}
+          <div class="card-actions">
+            <div>
+              <span style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">${item.person || 'Family'}</span>
+            </div>
+            <div>
+              ${validEmailUrl ? `<a href="${validEmailUrl}" target="_blank" rel="noopener noreferrer" class="btn-action" style="text-decoration:none; background:#f3f4f6; color:#374151;">✉️ Email</a>` : ''}
+              <a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="btn-action" style="text-decoration:none; background:#f3f4f6; color:#374151;">📅 Add</a>
+              <button class="btn-action btn-delete" onclick="handleAction(${item.rowId}, 'delete', this)">🗑️ Delete</button>
+            </div>
+          </div>
+        `;
+      } else {
+        card.innerHTML = `
+          <div class="card-title">${item.title || 'Untitled'}</div>
+          <div class="card-meta">📅 ${dateFormatted} | 👤 ${item.person || 'Family'}</div>
+          <div class="card-body">${item.notes || 'No content body available.'}</div>
+          <div class="card-actions">
+            ${validEmailUrl ? `<a href="${validEmailUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">Open Original Email ↗</a>` : '<span></span>'}
+            <div>
+              <button class="btn-action btn-archive" onclick="handleAction(${item.rowId}, 'archive', this)">📁 Archive</button>
+              <button class="btn-action btn-delete" onclick="handleAction(${item.rowId}, 'delete', this)">🗑️ Delete</button>
+            </div>
+          </div>
+        `;
+      }
+
+      feed.appendChild(card);
+    });
+  }
+
+  async function handleAction(rowId, action, btnElement) {
+    if (action === 'delete' && !confirm('Are you sure you want to permanently delete this item?')) {
+      return;
+    }
+
+    if (btnElement) {
+      btnElement.disabled = true;
+      btnElement.innerText = action === 'delete' ? 'Deleting...' : 'Archiving...';
+    }
+
+    try {
+      await fetch(API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `action=${action}&rowId=${rowId}`
+      });
+
+      rawData = rawData.filter(item => item.rowId !== rowId);
+      renderFeed();
+
+    } catch (e) {
+      alert('Action failed. Please check connection and try again.');
+      if (btnElement) {
+        btnElement.disabled = false;
+        btnElement.innerText = action === 'delete' ? '🗑️ Delete' : '📁 Archive';
+      }
+    }
+  }
+
+  fetchData();
+</script>
 
 </body>
 </html>
