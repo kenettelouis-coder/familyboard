@@ -250,7 +250,7 @@
     <form id="task-form" onsubmit="submitTask(event)">
       <div class="form-group">
         <label for="task-title">Task Name</label>
-        <input type="text" id="task-title" requiredplaceholder="e.g., Return Permission Slip">
+        <input type="text" id="task-title" required placeholder="e.g., Return Permission Slip">
       </div>
       <div class="form-group">
         <label for="task-assigned">Assigned To</label>
@@ -281,8 +281,8 @@
 </div>
 
 <script>
-  // PASTE YOUR DEPLOYED WEB APP URL HERE:
-  const API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+  // REPLACE THE LINK BELOW WITH YOUR ACTUAL APPS SCRIPT WEB APP URL:
+  const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
   // Initialize
   document.addEventListener("DOMContentLoaded", () => {
