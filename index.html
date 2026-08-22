@@ -267,6 +267,9 @@
 
       const gcalUrl = createGCalUrl(item);
       const validEmailUrl = formatEmailUrl(item.emailLink);
+      
+      // Escape rowId properly for strings
+      const safeRowId = String(item.rowId).replace(/'/g, "\\'");
 
       if (activeMainTab === 'calendar') {
         const locationLine = item.location ? `📍 ${item.location}` : '';
@@ -282,7 +285,7 @@
             <div>
               ${validEmailUrl ? `<a href="${validEmailUrl}" target="_blank" rel="noopener noreferrer" class="btn-action" style="text-decoration:none; background:#f3f4f6; color:#374151;">✉️ Email</a>` : ''}
               <a href="${gcalUrl}" target="_blank" rel="noopener noreferrer" class="btn-action" style="text-decoration:none; background:#f3f4f6; color:#374151;">📅 Add</a>
-              <button class="btn-action btn-delete" onclick="handleAction(${item.rowId}, 'delete', this)">🗑️ Delete</button>
+              <button class="btn-action btn-delete" onclick="handleAction('${safeRowId}', 'delete', this)">🗑️ Delete</button>
             </div>
           </div>
         `;
@@ -294,8 +297,8 @@
           <div class="card-actions">
             ${validEmailUrl ? `<a href="${validEmailUrl}" target="_blank" rel="noopener noreferrer" class="btn-link">Open Original Email ↗</a>` : '<span></span>'}
             <div>
-              <button class="btn-action btn-archive" onclick="handleAction(${item.rowId}, 'archive', this)">📁 Archive</button>
-              <button class="btn-action btn-delete" onclick="handleAction(${item.rowId}, 'delete', this)">🗑️ Delete</button>
+              <button class="btn-action btn-archive" onclick="handleAction('${safeRowId}', 'archive', this)">📁 Archive</button>
+              <button class="btn-action btn-delete" onclick="handleAction('${safeRowId}', 'delete', this)">🗑️ Delete</button>
             </div>
           </div>
         `;
@@ -316,14 +319,17 @@
     }
 
     try {
+      const params = new URLSearchParams();
+      params.append('action', action);
+      params.append('rowId', rowId);
+
       await fetch(API_URL, {
         method: 'POST',
-        mode: 'no-cors',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `action=${action}&rowId=${rowId}`
+        body: params
       });
 
-      rawData = rawData.filter(item => item.rowId !== rowId);
+      rawData = rawData.filter(item => String(item.rowId) !== String(rowId));
       renderFeed();
 
     } catch (e) {
