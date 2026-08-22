@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Family Dashboard</title>
+  <title>Family Dashboard - Aug 20</title>
   <style>
     :root {
       --primary: #4f46e5;
@@ -103,7 +103,7 @@
     <h1>Family Dashboard</h1>
   </header>
 
-  <div id="appointments-list">Loading appointments...</div>
+  <div id="appointments-list">Loading emails for August 20...</div>
 </div>
 
 <script>
@@ -119,14 +119,27 @@
       .then(res => res.json())
       .then(data => {
         if (!data || !data.length) {
-          container.innerHTML = "<p>No upcoming appointments found.</p>";
+          container.innerHTML = "<p>No emails found for August 20, 2026.</p>";
           return;
         }
-        container.innerHTML = data.map(item => `
+
+        // Filter for emails dated August 20, 2026
+        const aug20Data = data.filter(item => {
+          if (!item.dateTime) return false;
+          const d = new Date(item.dateTime);
+          return d.getFullYear() === 2026 && d.getMonth() === 7 && d.getDate() === 20;
+        });
+
+        if (!aug20Data.length) {
+          container.innerHTML = "<p>No emails found specifically for August 20, 2026.</p>";
+          return;
+        }
+
+        container.innerHTML = aug20Data.map(item => `
           <div class="card">
             <div class="card-info">
               <h3><span class="badge">${item.person || 'Family'}</span> ${item.title}</h3>
-              <p><strong>Date/Time:</strong> ${item.dateTime ? new Date(item.dateTime).toLocaleString() : 'N/A'}</p>
+              <p><strong>Date/Time:</strong> ${new Date(item.dateTime).toLocaleString()}</p>
               ${item.notes ? `<p><strong>Notes:</strong> ${item.notes}</p>` : ''}
             </div>
             <div>
@@ -135,7 +148,7 @@
           </div>
         `).join('');
       })
-      .catch(err => { container.innerHTML = "<p>Error loading appointments.</p>"; });
+      .catch(err => { container.innerHTML = "<p>Error loading emails.</p>"; });
   }
 </script>
 
