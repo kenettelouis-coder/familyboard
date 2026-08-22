@@ -39,23 +39,30 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      gap: 16px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
+    .card-info {
+      flex: 1;
+    }
+
     .card-info h3 {
-      margin: 0 0 4px 0;
+      margin: 0 0 8px 0;
       font-size: 1.1rem;
+      line-height: 1.4;
     }
 
     .card-info p {
-      margin: 2px 0;
+      margin: 4px 0;
       color: #64748b;
       font-size: 0.9rem;
+      line-height: 1.5;
     }
 
     .badge {
@@ -66,18 +73,22 @@
       font-weight: 600;
       background: #e0e7ff;
       color: #3730a3;
-      margin-right: 6px;
+      margin-right: 8px;
+      vertical-align: middle;
     }
 
     .btn-action {
       background: #f1f5f9;
       border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 4px;
+      padding: 8px 12px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 0.85rem;
       text-decoration: none;
       color: var(--text);
+      white-space: nowrap;
+      display: inline-block;
+      text-align: center;
     }
 
     .btn-action:hover {
