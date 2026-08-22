@@ -41,7 +41,7 @@
       font-size: 1.75rem;
     }
 
-    /* Tabs */
+    /* Tabs Layout */
     .tabs {
       display: flex;
       gap: 8px;
@@ -224,17 +224,18 @@
     <h1>Family Dashboard</h1>
   </header>
 
+  <!-- TAB NAVIGATION -->
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('appointments')">Appointments & Calendar</button>
     <button class="tab-btn" onclick="switchTab('tasks')">Family Tasks</button>
   </div>
 
-  <!-- APPOINTMENTS TAB -->
+  <!-- TAB 1: APPOINTMENTS & CALENDAR -->
   <div id="tab-appointments" class="tab-content active">
     <div id="appointments-list">Loading appointments...</div>
   </div>
 
-  <!-- TASKS TAB -->
+  <!-- TAB 2: FAMILY TASKS -->
   <div id="tab-tasks" class="tab-content">
     <div class="actions-bar">
       <button class="btn" onclick="openTaskModal()">+ Add New Task</button>
@@ -281,7 +282,6 @@
 </div>
 
 <script>
-  // LINE 211
   const API_URL = "https://script.google.com/macros/s/AKfycbyzjr6wOvytUVVc7t40UkoBSvq45TasWRV_UUQ9YWbbka5jjR_Ol4zGQCJDwnDSObQl/exec";
 
   // Initialize
@@ -290,7 +290,7 @@
     loadTasks();
   });
 
-  // Tab Switcher
+  // Tab Switcher Logic
   function switchTab(tabName) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -312,7 +312,7 @@
     fetch(`${API_URL}?type=appointments`)
       .then(res => res.json())
       .then(data => {
-        if (!data.length) {
+        if (!data || !data.length) {
           container.innerHTML = "<p>No upcoming appointments found.</p>";
           return;
         }
@@ -320,7 +320,7 @@
           <div class="card">
             <div class="card-info">
               <h3><span class="badge">${item.person || 'Family'}</span> ${item.title}</h3>
-              <p><strong>Date/Time:</strong> ${item.dateTime || 'N/A'}</p>
+              <p><strong>Date/Time:</strong> ${item.dateTime ? new Date(item.dateTime).toLocaleString() : 'N/A'}</p>
               ${item.notes ? `<p><strong>Notes:</strong> ${item.notes}</p>` : ''}
             </div>
             <div class="card-actions">
@@ -406,7 +406,7 @@
       });
   }
 
-  // Modal Handlers
+  // Modal Controls
   function openTaskModal() { document.getElementById("task-modal").classList.add("open"); }
   function closeTaskModal() { document.getElementById("task-modal").classList.remove("open"); }
 </script>
